@@ -1,0 +1,5 @@
+# Core server dependency
+flask>=3.0
+
+# Core client dependency
+requests>=2.31
