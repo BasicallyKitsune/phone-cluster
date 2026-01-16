@@ -4,10 +4,11 @@ phone-cluster: client.__main__
 Module entrypoint for running the Phone Cluster client.
 """
 
+import os
+base_url = os.getenv("PHONE_CLUSTER_URL", "http://127.0.0.1:8787")
+
 def main():
     import requests
-
-    base_url = "http://127.0.0.1:8787"
 
     # ---- health check ----
     try:
