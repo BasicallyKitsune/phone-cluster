@@ -10,8 +10,8 @@ This project is a tiny server + client setup designed for:
 
 ## Project layout
 
-server/ # Flask-based server
-client/ # Simple HTTP client
-clusterctl/ # Install / uninstall manager
-scripts/ # Thin shell wrappers
-config/ # Example config files
+ - server/ # Flask-based server
+ - client/ # Simple HTTP client
+ - clusterctl/ # Install / uninstall manager
+ - scripts/ # Thin shell wrappers
+ - config/ # Example config files
