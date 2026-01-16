@@ -1,0 +1,5 @@
+# Phone Cluster - Client Configuration (example)
+
+[client]
+server_url = "http://127.0.0.1:8787"
+client_name = "example-client"
