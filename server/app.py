@@ -83,18 +83,25 @@ def create_app():
         if not isinstance(name, str) or not name.strip():
             return jsonify(error="Missing or invalid 'name'"), 400
 
-        client_id = str(uuid4())
-        created_at = now_iso()
+        client_id = str(__import__("uuid").uuid4())
+        created_at = dbmod.now_iso()
 
-        clients[client_id] = {
-            "client_id": client_id,
-            "name": name.strip(),
-            "created_at": created_at,
-            "last_seen": created_at,
-            "capabilities": data.get("capabilities") if isinstance(data.get("capabilities"), dict) else {},
-        }
+        capabilities = data.get("capabilities")
+        if not isinstance(capabilities, dict):
+            capabilities = {}
+
+        conn = get_db()
+        conn.execute(
+            """
+            INSERT INTO clients (client_id, name, created_at, last_seen, capabilities)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (client_id, name.strip(), created_at, created_at, json.dumps(capabilities)),
+        )
+        conn.commit()
 
         return jsonify(client_id=client_id), 201
+
 
     @app.get("/v1/clients")
     def list_clients():
@@ -118,11 +125,17 @@ def create_app():
         if not isinstance(client_id, str) or not client_id.strip():
             return jsonify(error="Missing or invalid 'client_id'"), 400
 
-        client = clients.get(client_id)
-        if client is None:
+        conn = get_db()
+        cur = conn.execute(
+            "UPDATE clients SET last_seen = ? WHERE client_id = ?",
+            (dbmod.now_iso(), client_id.strip()),
+        )
+        conn.commit()
+
+        if cur.rowcount == 0:
             return jsonify(error="Client not found"), 404
 
-        client["last_seen"] = now_iso()
         return jsonify(ok=True)
+
 
     return app
