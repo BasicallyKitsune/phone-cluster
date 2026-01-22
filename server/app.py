@@ -17,11 +17,18 @@ from server import db as dbmod
 def create_app():
     app = Flask(__name__)
 
-    # In-memory client registry (v0.x). Will move to persistence later.
-    clients = {}
-
     def now_iso() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    def row_to_client(row):
+        return {
+            "client_id": row["client_id"],
+            "name": row["name"],
+            "created_at": row["created_at"],
+            "last_seen": row["last_seen"],
+            "capabilities": json.loads(row["capabilities"] or "{}"),
+        }
+
 
     # Create one DB connection per request (stored in flask.g)
     def get_db():
@@ -105,14 +112,26 @@ def create_app():
 
     @app.get("/v1/clients")
     def list_clients():
-        return jsonify(clients=list(clients.values()))
+        conn = get_db()
+        rows = conn.execute(
+            "SELECT client_id, name, created_at, last_seen, capabilities FROM clients ORDER BY created_at DESC"
+        ).fetchall()
+        return jsonify(clients=[row_to_client(r) for r in rows])
+
 
     @app.get("/v1/clients/<client_id>")
     def get_client(client_id: str):
-        client = clients.get(client_id)
-        if client is None:
+        conn = get_db()
+        row = conn.execute(
+            "SELECT client_id, name, created_at, last_seen, capabilities FROM clients WHERE client_id = ?",
+            (client_id,),
+        ).fetchone()
+
+        if row is None:
             return jsonify(error="Client not found"), 404
-        return jsonify(client)
+
+        return jsonify(row_to_client(row))
+
 
     @app.post("/v1/heartbeat")
     def heartbeat():
