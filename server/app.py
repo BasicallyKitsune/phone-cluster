@@ -4,9 +4,14 @@ phone-cluster: server.app
 Minimal Flask server for the Phone Cluster project.
 """
 
-from flask import Flask, jsonify, request
+import json
+from pathlib import Path
+
+from flask import Flask, jsonify, request, g
 from uuid import uuid4
 from datetime import datetime, timezone
+
+from server import db as dbmod
 
 
 def create_app():
@@ -17,6 +22,21 @@ def create_app():
 
     def now_iso() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    # Create one DB connection per request (stored in flask.g)
+    def get_db():
+        conn = g.get("db_conn")
+        if conn is None:
+            conn = dbmod.connect()
+            dbmod.init_db(conn)
+            g.db_conn = conn
+        return conn
+
+    @app.teardown_appcontext
+    def close_db(_exc):
+        conn = g.pop("db_conn", None)
+        if conn is not None:
+            conn.close()
 
     @app.get("/health")
     def health():
