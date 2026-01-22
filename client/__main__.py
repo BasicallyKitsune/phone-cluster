@@ -102,6 +102,22 @@ def register_if_needed(cfg: dict) -> dict:
     return cfg
 
 
+def send_heartbeat(cfg: dict) -> None:
+    client_id = cfg.get("client_id")
+    if not client_id:
+        return
+
+    base_url = cfg["server_url"]
+    payload = {"client_id": client_id}
+
+    try:
+        resp = requests.post(f"{base_url}/v1/heartbeat", json=payload, timeout=5)
+        resp.raise_for_status()
+        print("Heartbeat sent")
+    except Exception as exc:
+        print("Heartbeat failed:", exc)
+
+
 def main():
     cfg = load_client_config()
     base_url = cfg["server_url"]
@@ -117,6 +133,7 @@ def main():
 
     # ---- register ----
     cfg = register_if_needed(cfg)
+    send_heartbeat(cfg)
 
     # ---- ping ----
     payload = {
