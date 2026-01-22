@@ -52,4 +52,28 @@ def create_app():
             client=client_name
         )
 
+    @app.post("/v1/register")
+    def register():
+        if not request.is_json:
+            return jsonify(error="Expected JSON body"), 400
+
+        data = request.get_json(silent=True) or {}
+        name = data.get("name")
+
+        if not isinstance(name, str) or not name.strip():
+            return jsonify(error="Missing or invalid 'name'"), 400
+
+        client_id = str(uuid4())
+        created_at = now_iso()
+
+        clients[client_id] = {
+            "client_id": client_id,
+            "name": name.strip(),
+            "created_at": created_at,
+            "last_seen": created_at,
+            "capabilities": data.get("capabilities") if isinstance(data.get("capabilities"), dict) else {},
+        }
+
+        return jsonify(client_id=client_id), 201
+
     return app
