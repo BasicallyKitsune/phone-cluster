@@ -87,4 +87,22 @@ def create_app():
             return jsonify(error="Client not found"), 404
         return jsonify(client)
 
+    @app.post("/v1/heartbeat")
+    def heartbeat():
+        if not request.is_json:
+            return jsonify(error="Expected JSON body"), 400
+
+        data = request.get_json(silent=True) or {}
+        client_id = data.get("client_id")
+
+        if not isinstance(client_id, str) or not client_id.strip():
+            return jsonify(error="Missing or invalid 'client_id'"), 400
+
+        client = clients.get(client_id)
+        if client is None:
+            return jsonify(error="Client not found"), 404
+
+        client["last_seen"] = now_iso()
+        return jsonify(ok=True)
+
     return app
