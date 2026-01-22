@@ -76,6 +76,32 @@ def save_client_id(client_id: str) -> None:
 
     CONFIG_FILE.write_text(text, encoding="utf-8")
 
+
+def register_if_needed(cfg: dict) -> dict:
+    if cfg.get("client_id"):
+        return cfg
+
+    base_url = cfg["server_url"]
+    payload = {"name": cfg["client_name"]}
+
+    try:
+        resp = requests.post(f"{base_url}/v1/register", json=payload, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+
+        client_id = data.get("client_id")
+        if isinstance(client_id, str) and client_id:
+            save_client_id(client_id)
+            cfg["client_id"] = client_id
+            print("Registered client_id:", client_id)
+        else:
+            print("Register response missing client_id")
+    except Exception as exc:
+        print("Registration failed:", exc)
+
+    return cfg
+
+
 def main():
     cfg = load_client_config()
     base_url = cfg["server_url"]
@@ -88,6 +114,9 @@ def main():
     except Exception as exc:
         print("Failed to contact server:", exc)
         return  # no point continuing if server is down
+
+    # ---- register ----
+    cfg = register_if_needed(cfg)
 
     # ---- ping ----
     payload = {
@@ -102,9 +131,9 @@ def main():
         )
         response.raise_for_status()
         print("Ping response:", response.json())
+
     except Exception as exc:
         print("Ping failed:", exc)
-
 
 if __name__ == "__main__":
     main()
