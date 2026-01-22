@@ -27,6 +27,7 @@ Format:
 [client]
 server_url = "http://127.0.0.1:8787"
 client_name = "example-client"
+client_id = "string | null"
 ```
 
 Environment variables:
@@ -38,6 +39,7 @@ Defaults:
 
 * server_url: [http://127.0.0.1:8787](http://127.0.0.1:8787)
 * client_name: example-client
+* client_id: null
 
 ---
 
@@ -103,5 +105,89 @@ Response:
 {
   "received": true,
   "client": "string | null"
+}
+```
+
+---
+
+### POST /v1/register
+
+Purpose: register a client and assign a stable client_id.
+
+Request:
+
+```json
+{
+  "name": "string"
+}
+```
+
+Response:
+
+```json
+{
+  "client_id": "string"
+}
+```
+
+---
+
+### POST /v1/heartbeat
+
+Purpose: report client liveness.
+
+Request:
+
+```json
+{
+  "client_id": "string"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true
+}
+```
+
+---
+
+### GET /v1/clients
+
+Purpose: list registered clients.
+
+Response:
+
+```json
+{
+  "clients": [
+    {
+      "client_id": "string",
+      "name": "string",
+      "created_at": "iso8601",
+      "last_seen": "iso8601",
+      "capabilities": {}
+    }
+  ]
+}
+```
+
+---
+
+### GET /v1/clients/{client_id}
+
+Purpose: retrieve a single client record.
+
+Response:
+
+```json
+{
+  "client_id": "string",
+  "name": "string",
+  "created_at": "iso8601",
+  "last_seen": "iso8601",
+  "capabilities": {}
 }
 ```
