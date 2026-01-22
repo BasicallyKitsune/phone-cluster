@@ -5,9 +5,18 @@ Minimal Flask server for the Phone Cluster project.
 """
 
 from flask import Flask, jsonify, request
+from uuid import uuid4
+from datetime import datetime, timezone
+
 
 def create_app():
     app = Flask(__name__)
+
+    # In-memory client registry (v0.x). Will move to persistence later.
+    clients = {}
+
+    def now_iso() -> str:
+        return datetime.now(timezone.utc).isoformat()
 
     @app.get("/health")
     def health():
