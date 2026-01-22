@@ -76,4 +76,15 @@ def create_app():
 
         return jsonify(client_id=client_id), 201
 
+    @app.get("/v1/clients")
+    def list_clients():
+        return jsonify(clients=list(clients.values()))
+
+    @app.get("/v1/clients/<client_id>")
+    def get_client(client_id: str):
+        client = clients.get(client_id)
+        if client is None:
+            return jsonify(error="Client not found"), 404
+        return jsonify(client)
+
     return app
